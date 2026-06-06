@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matematik Oyun Merkezi</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a1a; --panel:#0f0f2a; --border:#1a1a4a;
+  --accent:#00f5ff; --accent2:#ff006e; --gold:#ffd700;
+  --green:#00ff88; --purple:#bf5fff; --text:#c8d6e5;
+  --grid:rgba(0,245,255,0.06);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:'Share Tech Mono',monospace;
+  min-height:100vh; display:flex; flex-direction:column;
+  align-items:center; padding:16px;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+h1{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(1.2rem,4vw,2rem); font-weight:900;
+  color:var(--accent); text-shadow:0 0 20px var(--accent);
+  letter-spacing:4px; margin-bottom:4px; text-align:center;
+}
+.subtitle{color:var(--accent2);font-size:.75rem;letter-spacing:3px;margin-bottom:16px;text-align:center;}
+
+.menu-grid{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:14px; width:100%; max-width:900px; margin-bottom:20px;
+}
+.menu-card{
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:12px; padding:20px; cursor:pointer;
+  transition:all .25s; text-align:center;
+  display:flex; flex-direction:column; gap:8px; align-items:center;
+}
+.menu-card:hover{border-color:var(--accent);box-shadow:0 0 16px rgba(0,245,255,.2);transform:translateY(-2px);}
+.menu-card .ikon{font-size:2rem;}
+.menu-card .isim{font-family:'Orbitron',monospace;font-size:.8rem;color:var(--accent);letter-spacing:2px;}
+.menu-card .aciklama{font-size:.7rem;color:#666;line-height:1.5;}
+
+.oyun-alani{width:100%;max-width:1100px;display:none;}
+.oyun-alani.goster{display:block;}
+.geri-btn{
+  background:transparent; border:1px solid var(--border);
+  color:var(--text); font-family:'Share Tech Mono',monospace;
+  font-size:.75rem; padding:7px 14px; border-radius:8px;
+  cursor:pointer; margin-bottom:14px; letter-spacing:1px;
+}
+.geri-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.panel-title{font-family:'Orbitron',monospace;font-size:.65rem;color:var(--accent);letter-spacing:3px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+.iki-sutun{display:flex;gap:16px;flex-wrap:wrap;}
+.iki-sutun .panel{flex:1;min-width:280px;}
+
+.soru-box{background:rgba(0,245,255,.04);border:1px solid var(--border);border-radius:10px;padding:14px;min-height:90px;display:flex;flex-direction:column;justify-content:center;margin-bottom:12px;}
+.soru-label{font-size:.6rem;color:var(--accent2);letter-spacing:2px;margin-bottom:8px;}
+.soru-text{font-size:.95rem;color:white;line-height:1.7;white-space:pre-line;}
+.ipucu{font-size:.75rem;color:var(--gold);margin-top:8px;display:none;}
+.ipucu.goster{display:block;}
+
+.input-row{display:flex;gap:8px;margin-bottom:10px;}
+input[type=number]{
+  flex:1;background:#0a0a1a;border:1px solid var(--accent);
+  border-radius:8px;color:var(--accent);
+  font-family:'Orbitron',monospace;font-size:1rem;
+  padding:10px 14px;outline:none;text-align:center;
+}
+input[type=number]:focus{box-shadow:0 0 10px var(--accent);}
+.btn{
+  background:var(--accent);color:#000;border:none;border-radius:8px;
+  padding:10px 16px;font-family:'Orbitron',monospace;
+  font-size:.7rem;font-weight:700;cursor:pointer;letter-spacing:1px;transition:all .2s;
+}
+.btn:hover{background:white;transform:scale(1.04);}
+.btn.red{background:var(--accent2);color:white;}
+.btn.red:hover{background:white;color:var(--accent2);}
+.btn.gold{background:var(--gold);color:#000;}
+.btn.gold:hover{background:white;color:var(--gold);}
+.btn.gray{background:#222;color:var(--text);border:1px solid var(--border);}
+.btn.gray:hover{background:#333;}
+
+.feedback{text-align:center;font-size:.85rem;min-height:22px;font-weight:bold;margin:4px 0;}
+.feedback.dogru{color:var(--green);}
+.feedback.yanlis{color:var(--accent2);}
+
+.harf-row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;}
+.harf-badge{
+  width:38px;height:38px;border-radius:8px;border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;
+  color:#2a2a2a;background:#111;transition:all .5s;
+}
+.harf-badge.acik{border-color:var(--accent);color:var(--accent);box-shadow:0 0 12px var(--accent);background:rgba(0,245,255,.08);}
+
+.kutlama{display:none;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:10px;}
+.kutlama.goster{display:flex;}
+.kutlama-baslik{font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:900;color:var(--gold);text-shadow:0 0 20px var(--gold);animation:pulse 1.5s infinite;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px;}
+
+canvas{width:100%;border-radius:8px;display:block;}
+
+.cubuk-container{display:flex;align-items:flex-end;justify-content:center;gap:10px;height:220px;padding:10px 0;border-bottom:2px solid var(--accent);margin-bottom:8px;}
+.cubuk-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.cubuk{width:44px;border-radius:4px 4px 0 0;transition:height .6s ease;cursor:pointer;position:relative;}
+.cubuk-etiket{font-size:.65rem;color:var(--text);text-align:center;max-width:50px;}
+.cubuk-val{font-size:.7rem;font-weight:bold;text-align:center;}
+
+.dy-kart{
+  background:rgba(0,245,255,.04);border:2px solid var(--border);
+  border-radius:12px;padding:20px;text-align:center;
+  font-size:1rem;color:white;line-height:1.7;margin-bottom:12px;
+  white-space:pre-line;
+}
+.dy-butonlar{display:flex;gap:12px;justify-content:center;}
+.dy-btn{
+  flex:1;max-width:130px;padding:14px;border-radius:10px;
+  border:2px solid;font-family:'Orbitron',monospace;
+  font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s;background:transparent;
+}
+.dy-btn.dogru-btn{border-color:var(--green);color:var(--green);}
+.dy-btn.dogru-btn:hover{background:var(--green);color:#000;}
+.dy-btn.yanlis-btn{border-color:var(--accent2);color:var(--accent2);}
+.dy-btn.yanlis-btn:hover{background:var(--accent2);color:white;}
+
+.skor-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.skor-badge{background:rgba(0,245,255,.08);border:1px solid var(--accent);border-radius:8px;padding:4px 12px;font-size:.75rem;color:var(--accent);}
+
+.sec-ekran{display:flex;flex-direction:column;gap:12px;}
+select{background:#0a0a1a;border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:.85rem;padding:8px 12px;outline:none;cursor:pointer;width:100%;}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ── ÜÇGEN OYUNU ── */
+.ucgen-layout{display:flex;gap:16px;flex-wrap:wrap;}
+.ucgen-diagram-panel{flex:1;min-width:300px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:12px;}
+.ucgen-soru-panel{flex:0 0 300px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.ucgen-sayac{font-size:.65rem;color:#555;letter-spacing:2px;}
+.ucgen-soru-kutu{background:rgba(255,215,0,.04);border:1px solid rgba(255,215,0,.15);border-radius:10px;padding:14px;margin-bottom:12px;min-height:80px;display:flex;align-items:center;}
+.ucgen-soru-metin{font-size:.9rem;color:white;line-height:1.7;white-space:pre-line;}
+.hint-bolge{margin-bottom:10px;}
+.hint-adim{background:rgba(0,245,255,.05);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:8px 12px;font-size:.78rem;color:var(--text);line-height:1.6;margin-bottom:6px;animation:fadeIn .3s ease;}
+.hint-btn{background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:'Orbitron',monospace;font-size:.65rem;padding:7px 14px;border-radius:8px;cursor:pointer;letter-spacing:1px;transition:all .2s;width:100%;margin-bottom:8px;}
+.hint-btn:hover{background:rgba(255,215,0,.12);}
+.hint-btn:disabled{opacity:.35;cursor:not-allowed;}
+.cozum-panel{background:rgba(0,255,136,.05);border:1px solid rgba(0,255,136,.2);border-radius:8px;padding:12px;font-size:.78rem;color:var(--green);line-height:1.8;margin-top:8px;display:none;white-space:pre-line;}
+.cozum-panel.acik{display:block;animation:fadeIn .4s ease;}
+.ucgen-puan-satir{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.yanlis-sayac{font-size:.7rem;color:var(--accent2);}
+svg text{font-family:'Share Tech Mono',monospace;}
+</style>
+</head>
+<body>
+
+<h1>🎯 MATEMATİK MERKEZİ</h1>
+<p class="subtitle">9. SINIF · 5 FARKLI OYUN</p>
+
+<div class="menu-grid" id="anaMenu">
+  <div class="menu-card" onclick="oyunAc('koordinat')">
+    <div class="ikon">📐</div>
+    <div class="isim">KOORDİNAT</div>
+    <div class="aciklama">Soruları çöz, koordinat sisteminde kelime oluştur</div>
+  </div>
+  <div class="menu-card" onclick="oyunAc('daire')">
+    <div class="ikon">🥧</div>
+    <div class="isim">DAİRE GRAFİĞİ</div>
+    <div class="aciklama">Pasta grafikleri oku ve yorumla</div>
+  </div>
+  <div class="menu-card" onclick="oyunAc('cubuk')">
+    <div class="ikon">📊</div>
+    <div class="isim">ÇUBUK GRAFİK</div>
+    <div class="aciklama">Çubuk grafik verilerini analiz et</div>
+  </div>
+  <div class="menu-card" onclick="oyunAc('dogru-yanlis')">
+    <div class="ikon">✅</div>
+    <div class="isim">DOĞRU / YANLIŞ</div>
+    <div class="aciklama">Matematik ifadelerini değerlendir</div>
+  </div>
+  <div class="menu-card" onclick="oyunAc('ucgen')" style="border-color:rgba(255,215,0,.3);">
+    <div class="ikon">📐</div>
+    <div class="isim" style="color:var(--gold);">ÜÇGEN SORULARI</div>
+    <div class="aciklama">Şekilli gerçek sınav soruları — hint & çözüm adımları</div>
+  </div>
+</div>
+
+<!-- OYUN 1: KOORDİNAT -->
+<div class="oyun-alani" id="oyun-koordinat">
+  <button class="geri-btn" onclick="menuye()">← ANA MENÜ</button>
+  <div class="iki-sutun">
+    <div class="panel">
+      <div class="panel-title">// KOORDİNAT SİSTEMİ</div>
+      <canvas id="koordCanvas" width="520" height="300"></canvas>
+    </div>
+    <div class="panel" style="flex:0 0 290px;">
+      <div class="panel-title">// OYUN</div>
+      <div class="skor-bar">
+        <span class="skor-badge" id="koordSkor">SKOR: 0</span>
+        <span style="font-size:.65rem;color:#555" id="koordAdim"></span>
+      </div>
+      <div id="koordBasSec" class="sec-ekran">
+        <div style="font-size:.7rem;color:var(--accent);letter-spacing:2px;">// KELİME SEÇ</div>
+        <select id="koordKelSel">
+          <option value="">— Rastgele —</option>
+          <option>MERVE</option><option>ALAN</option><option>DENGE</option>
+          <option>KARE</option><option>SAYI</option><option>BEŞ</option>
+        </select>
+        <button class="btn" onclick="koordBaslat()">▶ BAŞLAT</button>
+      </div>
+      <div id="koordOyunAlani" style="display:none">
+        <div class="harf-row" id="koordHarfRow"></div>
+        <div class="soru-box">
+          <div class="soru-label" id="koordSoruLabel"></div>
+          <div class="soru-text" id="koordSoruText"></div>
+          <div class="ipucu" id="koordIpucu"></div>
+        </div>
+        <div class="input-row">
+          <input type="number" id="koordCevap" placeholder="?" onkeydown="if(event.key==='Enter')koordKontrol()">
+          <button class="btn" onclick="koordKontrol()">GİR</button>
+        </div>
+        <div class="feedback" id="koordFeedback"></div>
+        <div class="kutlama" id="koordKutlama">
+          <div class="kutlama-baslik">🏆 TAMAMLANDI!</div>
+          <div id="koordKutText" style="font-size:.8rem;line-height:1.6;color:var(--text)"></div>
+          <div class="btn-row">
+            <button class="btn red" onclick="koordBaslat()">↺ TEKRAR</button>
+            <button class="btn gray" onclick="menuye()">MENÜ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OYUN 2: DAİRE GRAFİĞİ -->
+<div class="oyun-alani" id="oyun-daire">
+  <button class="geri-btn" onclick="menuye()">← ANA MENÜ</button>
+  <div class="iki-sutun">
+    <div class="panel">
+      <div class="panel-title">// DAİRE GRAFİĞİ</div>
+      <canvas id="daireCanvas" width="360" height="320"></canvas>
+      <div id="daireAciklama" style="margin-top:10px;font-size:.75rem;line-height:1.8;color:var(--text)"></div>
+    </div>
+    <div class="panel" style="flex:0 0 290px;">
+      <div class="panel-title">// SORU</div>
+      <div class="skor-bar">
+        <span class="skor-badge" id="daireSkor">SKOR: 0</span>
+        <span style="font-size:.65rem;color:#555" id="daireAdim">1 / 4</span>
+      </div>
+      <div class="soru-box">
+        <div class="soru-label" id="daireSoruLabel">// SORU</div>
+        <div class="soru-text" id="daireSoruText"></div>
+        <div class="ipucu" id="daireIpucu"></div>
+      </div>
+      <div class="input-row">
+        <input type="number" id="daireCevap" placeholder="?" onkeydown="if(event.key==='Enter')daireKontrol()">
+        <button class="btn" onclick="daireKontrol()">GİR</button>
+      </div>
+      <div class="feedback" id="daireFeedback"></div>
+      <div class="kutlama" id="daireKutlama">
+        <div class="kutlama-baslik">🎊 BRAVİSSİMO!</div>
+        <div style="font-size:.8rem;color:var(--text)">Tüm grafik sorularını çözdün!</div>
+        <div class="btn-row">
+          <button class="btn red" onclick="daireBaslat()">↺ TEKRAR</button>
+          <button class="btn gray" onclick="menuye()">MENÜ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OYUN 3: ÇUBUK GRAFİK -->
+<div class="oyun-alani" id="oyun-cubuk">
+  <button class="geri-btn" onclick="menuye()">← ANA MENÜ</button>
+  <div class="iki-sutun">
+    <div class="panel">
+      <div class="panel-title" id="cubukBaslik">// ÇUBUK GRAFİK</div>
+      <div class="cubuk-container" id="cubukContainer"></div>
+    </div>
+    <div class="panel" style="flex:0 0 290px;">
+      <div class="panel-title">// SORU</div>
+      <div class="skor-bar">
+        <span class="skor-badge" id="cubukSkor">SKOR: 0</span>
+        <span style="font-size:.65rem;color:#555" id="cubukAdim">1 / 6</span>
+      </div>
+      <div class="soru-box">
+        <div class="soru-label" id="cubukSoruLabel">// SORU</div>
+        <div class="soru-text" id="cubukSoruText"></div>
+        <div class="ipucu" id="cubukIpucu"></div>
+      </div>
+      <div class="input-row">
+        <input type="number" id="cubukCevap" placeholder="?" onkeydown="if(event.key==='Enter')cubukKontrol()">
+        <button class="btn" onclick="cubukKontrol()">GİR</button>
+      </div>
+      <div class="feedback" id="cubukFeedback"></div>
+      <div class="kutlama" id="cubukKutlama">
+        <div class="kutlama-baslik">📊 SÜPER!</div>
+        <div style="font-size:.8rem;color:var(--text)">Tüm grafik sorularını çözdün!</div>
+        <div class="btn-row">
+          <button class="btn red" onclick="cubukBaslat()">↺ TEKRAR</button>
+          <button class="btn gray" onclick="menuye()">MENÜ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OYUN 4: DOĞRU / YANLIŞ -->
+<div class="oyun-alani" id="oyun-dogru-yanlis">
+  <button class="geri-btn" onclick="menuye()">← ANA MENÜ</button>
+  <div class="panel" style="max-width:600px;margin:0 auto;">
+    <div class="panel-title">// DOĞRU mu? YANLIŞ mı?</div>
+    <div class="skor-bar">
+      <span class="skor-badge" id="dySkor">SKOR: 0</span>
+      <span style="font-size:.65rem;color:#555" id="dyAdim">1 / 12</span>
+    </div>
+    <div class="dy-kart" id="dyKart"></div>
+    <div class="dy-butonlar" id="dyButonlar">
+      <button class="dy-btn dogru-btn" onclick="dyKontrol(true)">✓ DOĞRU</button>
+      <button class="dy-btn yanlis-btn" onclick="dyKontrol(false)">✗ YANLIŞ</button>
+    </div>
+    <div class="feedback" id="dyFeedback" style="margin-top:10px;font-size:.9rem;"></div>
+    <div class="kutlama" id="dyKutlama" style="margin-top:10px;">
+      <div class="kutlama-baslik">🧠 MUHTEŞEM!</div>
+      <div id="dySonText" style="font-size:.85rem;color:var(--text);line-height:1.6;"></div>
+      <div class="btn-row">
+        <button class="btn red" onclick="dyBaslat()">↺ TEKRAR</button>
+        <button class="btn gray" onclick="menuye()">MENÜ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OYUN 5: ÜÇGEN SORULARI -->
+<div class="oyun-alani" id="oyun-ucgen">
+  <button class="geri-btn" onclick="menuye()">← ANA MENÜ</button>
+  <div class="ucgen-layout">
+    <div class="ucgen-diagram-panel">
+      <div class="panel-title" id="ucgenBaslik" style="width:100%;">// DİYAGRAM</div>
+      <div id="ucgenSvgAlan" style="width:100%;max-width:420px;"></div>
+      <div id="ucgenVerilar" style="font-size:.72rem;color:var(--text);line-height:1.9;width:100%;"></div>
+    </div>
+    <div class="ucgen-soru-panel">
+      <div class="panel-title">// SORU</div>
+      <div class="ucgen-puan-satir">
+        <span class="skor-badge" id="ucgenSkor">SKOR: 0</span>
+        <span class="ucgen-sayac" id="ucgenSayac">1 / 8</span>
+        <span class="yanlis-sayac" id="ucgenYanlisSayac">❌ 0</span>
+      </div>
+      <div class="ucgen-soru-kutu">
+        <div class="ucgen-soru-metin" id="ucgenSoruMetin"></div>
+      </div>
+      <div class="hint-bolge" id="ucgenHintBolge"></div>
+      <div class="input-row">
+        <input type="number" id="ucgenCevap" placeholder="Cevabınız?" onkeydown="if(event.key==='Enter')ucgenKontrol()">
+        <button class="btn" onclick="ucgenKontrol()">GİR</button>
+      </div>
+      <div class="feedback" id="ucgenFeedback"></div>
+      <button class="hint-btn" id="ucgenHintBtn" onclick="ucgenHintGoster()">💡 İPUCU AL</button>
+      <div class="cozum-panel" id="ucgenCozum"></div>
+      <div class="kutlama" id="ucgenKutlama" style="margin-top:12px;">
+        <div class="kutlama-baslik">🏆 ÜÇGEN USTASI!</div>
+        <div id="ucgenKutText" style="font-size:.82rem;color:var(--text);line-height:1.7;"></div>
+        <div class="btn-row">
+          <button class="btn red" onclick="ucgenBaslat()">↺ TEKRAR</button>
+          <button class="btn gray" onclick="menuye()">MENÜ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// OYUN 5: ÜÇGEN SORULARI — SVG diyagramlı, hint'li
+// ═══════════════════════════════════════════════════════
+
+// Her soru: svg, veri etiketi, soru, cevap, hint dizisi, çözüm adımları
+const UCGEN_SORULAR = [
+  {
+    baslik:"İÇ AÇILAR",
+    svg: `<svg viewBox="0 0 360 260" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="180,30 320,220 40,220" fill="rgba(0,245,255,0.06)" stroke="#00f5ff" stroke-width="2"/>
+      <text x="180" y="22" text-anchor="middle" fill="#ffd700" font-size="14">A</text>
+      <text x="328" y="230" fill="#ffd700" font-size="14">B</text>
+      <text x="20" y="230" fill="#ffd700" font-size="14">C</text>
+      <text x="180" y="52" text-anchor="middle" fill="#ff006e" font-size="13">x</text>
+      <text x="295" y="215" fill="#00ff88" font-size="13">65°</text>
+      <text x="48" y="215" fill="#00ff88" font-size="13">55°</text>
+      <line x1="180" y1="30" x2="320" y2="220" stroke="#00f5ff" stroke-width="2"/>
+      <line x1="320" y1="220" x2="40" y2="220" stroke="#00f5ff" stroke-width="2"/>
+      <line x1="40" y1="220" x2="180" y2="30" stroke="#00f5ff" stroke-width="2"/>
+    </svg>`,
+    veri:"∠B = 65°,  ∠C = 55°",
+    soru:"ABC üçgeninde ∠B = 65° ve ∠C = 55° olduğuna göre\n∠A = x kaç derecedir?",
+    cevap:60,
+    hintler:[
+      "💡 Bir üçgenin iç açıları toplamı her zaman 180°'dir.",
+      "💡 ∠A + ∠B + ∠C = 180° formülünü kullan.",
+      "💡 x + 65 + 55 = 180  →  x + 120 = 180"
+    ],
+    cozum:"∠A + ∠B + ∠C = 180°\nx + 65° + 55° = 180°\nx + 120° = 180°\nx = 180° − 120°\n✅ x = 60°"
+  },
+  {
+    baslik:"DIŞ AÇI TEOREMİ",
+    svg: `<svg viewBox="0 0 380 260" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="60,210 300,210 180,40" fill="rgba(0,245,255,0.06)" stroke="#00f5ff" stroke-width="2"/>
+      <line x1="300" y1="210" x2="360" y2="210" stroke="#ff006e" stroke-width="2" stroke-dasharray="6,3"/>
+      <text x="170" y="32" fill="#ffd700" font-size="14">A</text>
+      <text x="42" y="222" fill="#ffd700" font-size="14">B</text>
+      <text x="302" y="222" fill="#ffd700" font-size="14">C</text>
+      <text x="352" y="222" fill="#ff006e" font-size="13">D</text>
+      <text x="180" y="58" text-anchor="middle" fill="#00ff88" font-size="13">40°</text>
+      <text x="68" y="206" fill="#00ff88" font-size="13">70°</text>
+      <text x="312" y="206" fill="#ffd700" font-size="13">x</text>
+    </svg>`,
+    veri:"∠A = 40°,  ∠B = 70°\nCD, BC'nin uzantısı",
+    soru:"Şekilde ∠A = 40°, ∠B = 70° olduğuna göre\ndış açı ∠ACD = x kaç derecedir?",
+    cevap:110,
+    hintler:[
+      "💡 Bir üçgenin dış açısı, kendisiyle komşu olmayan iki iç açının toplamına eşittir.",
+      "💡 ∠ACD = ∠A + ∠B  (dış açı teoremi)",
+      "💡 x = 40° + 70° = ?"
+    ],
+    cozum:"Dış Açı Teoremi:\n∠ACD = ∠A + ∠B\nx = 40° + 70°\n✅ x = 110°"
+  },
+  {
+    baslik:"PIİSAGOR TEOREMİ",
+    svg: `<svg viewBox="0 0 360 280" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="60,220 60,60 280,220" fill="rgba(0,255,136,0.05)" stroke="#00ff88" stroke-width="2"/>
+      <rect x="60" y="200" width="20" height="20" fill="none" stroke="#00ff88" stroke-width="1.5"/>
+      <text x="40" y="145" fill="#ffd700" font-size="13">a</text>
+      <text x="165" y="245" text-anchor="middle" fill="#ffd700" font-size="13">b = 12</text>
+      <text x="178" y="130" fill="#ff006e" font-size="13">c = ?</text>
+      <text x="50" y="240" fill="#ffd700" font-size="12">a=9</text>
+      <text x="40" y="52" fill="#00ff88" font-size="14">A</text>
+      <text x="40" y="235" fill="#00ff88" font-size="14">B</text>
+      <text x="282" y="235" fill="#00ff88" font-size="14">C</text>
+    </svg>`,
+    veri:"Dik üçgen  |  AB = 9 cm,  BC = 12 cm\n∠B = 90°  (dik açı)",
+    soru:"Dik üçgende dik kenarlar AB = 9 cm ve BC = 12 cm.\nHipotenüs AC = c kaç cm?",
+    cevap:15,
+    hintler:[
+      "💡 Pisagor Teoremi: a² + b² = c²  (c = hipotenüs)",
+      "💡 c² = 9² + 12²  →  c² = 81 + 144 = 225",
+      "💡 c = √225 = ?"
+    ],
+    cozum:"Pisagor Teoremi: c² = a² + b²\nc² = 9² + 12²\nc² = 81 + 144\nc² = 225\nc = √225\n✅ c = 15 cm"
+  },
+  {
+    baslik:"ÜÇGEN EŞİTSİZLİĞİ",
+    svg: `<svg viewBox="0 0 360 260" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="180,30 330,220 30,220" fill="rgba(255,0,110,0.05)" stroke="#ff006e" stroke-width="2"/>
+      <text x="175" y="22" fill="#ffd700" font-size="14">A</text>
+      <text x="335" y="230" fill="#ffd700" font-size="14">B</text>
+      <text x="15" y="230" fill="#ffd700" font-size="14">C</text>
+      <text x="95" y="140" fill="#00f5ff" font-size="13">b = ?</text>
+      <text x="240" y="140" fill="#00f5ff" font-size="13">c = 7</text>
+      <text x="175" y="240" text-anchor="middle" fill="#00f5ff" font-size="13">a = 5</text>
+      <text x="110" y="50" fill="#ff006e" font-size="11" font-style="italic">b uzunluğu tam sayı</text>
+    </svg>`,
+    veri:"a = BC = 5 cm,  c = AB = 7 cm\nb = AC = ? (tam sayı, maks değer)",
+    soru:"Bir üçgenin iki kenarı 5 cm ve 7 cm.\nÜçüncü kenar b'nin alabileceği\nen büyük tam sayı değeri kaçtır?",
+    cevap:11,
+    hintler:[
+      "💡 Üçgen eşitsizliği: Her kenar, diğer iki kenarın toplamından küçük olmalıdır.",
+      "💡 b < a + c  →  b < 5 + 7  →  b < 12",
+      "💡 b tam sayı olduğuna göre en büyük değer 11'dir."
+    ],
+    cozum:"Üçgen Eşitsizliği:\nb < a + c\nb < 5 + 7\nb < 12\nTam sayı olduğundan:\n✅ b_max = 11 cm"
+  },
+  {
+    baslik:"İKİZKENAR ÜÇGEN",
+    svg: `<svg viewBox="0 0 360 270" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="180,25 320,230 40,230" fill="rgba(191,95,255,0.06)" stroke="#bf5fff" stroke-width="2"/>
+      <text x="173" y="18" fill="#ffd700" font-size="14">A</text>
+      <text x="325" y="242" fill="#ffd700" font-size="14">B</text>
+      <text x="22" y="242" fill="#ffd700" font-size="14">C</text>
+      <text x="95" y="130" fill="#bf5fff" font-size="13">10</text>
+      <text x="245" y="130" fill="#bf5fff" font-size="13">10</text>
+      <text x="178" y="252" text-anchor="middle" fill="#00f5ff" font-size="13">BC = ?</text>
+      <text x="178" y="55" text-anchor="middle" fill="#ff006e" font-size="13">36°</text>
+      <text x="42" y="225" fill="#00ff88" font-size="12">72°</text>
+      <text x="300" y="225" fill="#00ff88" font-size="12">72°</text>
+      <line x1="100" y1="128" x2="115" y2="118" stroke="#bf5fff" stroke-width="1.5"/>
+      <line x1="260" y1="118" x2="245" y2="128" stroke="#bf5fff" stroke-width="1.5"/>
+    </svg>`,
+    veri:"AB = AC = 10 cm  (ikizkenar)\n∠A = 36°,  ∠B = ∠C = 72°\nÇevre = ?",
+    soru:"İkizkenar ABC üçgeninde AB = AC = 10 cm\nve BC = 8 cm'dir.\nÜçgenin çevresi kaç cm?",
+    cevap:28,
+    hintler:[
+      "💡 Çevre = tüm kenarların toplamı",
+      "💡 AB + AC + BC = 10 + 10 + 8",
+      "💡 10 + 10 + 8 = ?"
+    ],
+    cozum:"Çevre = AB + AC + BC\nÇevre = 10 + 10 + 8\n✅ Çevre = 28 cm"
+  },
+  {
+    baslik:"ÜÇGENDE ALAN",
+    svg: `<svg viewBox="0 0 380 270" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="80,230 320,230 200,50" fill="rgba(0,245,255,0.05)" stroke="#00f5ff" stroke-width="2"/>
+      <line x1="200" y1="50" x2="200" y2="230" stroke="#ffd700" stroke-width="1.5" stroke-dasharray="5,4"/>
+      <rect x="200" y="210" width="20" height="20" fill="none" stroke="#ffd700" stroke-width="1.5"/>
+      <text x="190" y="42" fill="#ffd700" font-size="14">A</text>
+      <text x="62" y="244" fill="#ffd700" font-size="14">B</text>
+      <text x="323" y="244" fill="#ffd700" font-size="14">C</text>
+      <text x="160" y="248" text-anchor="middle" fill="#00f5ff" font-size="13">BC = 14 cm</text>
+      <text x="215" y="148" fill="#ff006e" font-size="13">h = 8 cm</text>
+      <text x="190" y="244" fill="#ffd700" font-size="12">H</text>
+    </svg>`,
+    veri:"Taban BC = 14 cm\nYükseklik AH = h = 8 cm",
+    soru:"ABC üçgeninde taban BC = 14 cm\nve yükseklik h = 8 cm olduğuna göre\nüçgenin alanı kaç cm²?",
+    cevap:56,
+    hintler:[
+      "💡 Üçgen Alanı = (taban × yükseklik) ÷ 2",
+      "💡 Alan = (BC × h) ÷ 2  =  (14 × 8) ÷ 2",
+      "💡 (14 × 8) ÷ 2 = 112 ÷ 2 = ?"
+    ],
+    cozum:"Alan = (taban × yükseklik) ÷ 2\nAlan = (14 × 8) ÷ 2\nAlan = 112 ÷ 2\n✅ Alan = 56 cm²"
+  },
+  {
+    baslik:"BENZERLİK ORANI",
+    svg: `<svg viewBox="0 0 380 270" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="60,220 200,40 200,220" fill="rgba(0,255,136,0.05)" stroke="#00ff88" stroke-width="2"/>
+      <polygon points="200,220 320,220 320,110" fill="rgba(255,215,0,0.05)" stroke="#ffd700" stroke-width="2" stroke-dasharray="5,3"/>
+      <text x="38" y="232" fill="#00ff88" font-size="13">A</text>
+      <text x="193" y="235" fill="#00ff88" font-size="13">B</text>
+      <text x="193" y="35" fill="#00ff88" font-size="13">C</text>
+      <text x="322" y="232" fill="#ffd700" font-size="13">D</text>
+      <text x="322" y="105" fill="#ffd700" font-size="13">E</text>
+      <text x="108" y="238" fill="#00f5ff" font-size="12">AB = 6</text>
+      <text x="200" y="135" fill="#ff006e" font-size="12">BC = 9</text>
+      <text x="258" y="238" fill="#ffd700" font-size="12">BD = ?</text>
+      <text x="328" y="170" fill="#ffd700" font-size="12">DE = 6</text>
+    </svg>`,
+    veri:"ABC ~ DBE  (benzer üçgenler)\nBC = 9 cm,  BE = 6 cm\nAB = 6 cm,  BD = ?",
+    soru:"ABC ~ DBE benzer üçgenlerinde\nBC = 9, BE = 6 ve AB = 6 cm.\nBD = ? kaç cm?",
+    cevap:4,
+    hintler:[
+      "💡 Benzer üçgenlerde karşılıklı kenarlar orantılıdır.",
+      "💡 AB/BD = BC/BE  →  6/BD = 9/6",
+      "💡 BD = (6 × 6) ÷ 9 = 36 ÷ 9 = ?"
+    ],
+    cozum:"Benzer üçgenler → karşılıklı kenarlar orantılı:\nAB/BD = BC/BE\n6/BD = 9/6\n9 × BD = 6 × 6\n9 × BD = 36\nBD = 36 ÷ 9\n✅ BD = 4 cm"
+  },
+  {
+    baslik:"AÇIORTAY TEOREMİ",
+    svg: `<svg viewBox="0 0 380 270" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="60,220 320,220 190,35" fill="rgba(255,0,110,0.05)" stroke="#ff006e" stroke-width="2"/>
+      <line x1="190" y1="35" x2="175" y2="220" stroke="#ffd700" stroke-width="1.8" stroke-dasharray="4,3"/>
+      <text x="182" y="26" fill="#ffd700" font-size="14">A</text>
+      <text x="40" y="234" fill="#ffd700" font-size="14">B</text>
+      <text x="323" y="234" fill="#ffd700" font-size="14">C</text>
+      <text x="162" y="234" fill="#bf5fff" font-size="13">D</text>
+      <text x="96" y="240" text-anchor="middle" fill="#00f5ff" font-size="12">BD = 4</text>
+      <text x="252" y="240" text-anchor="middle" fill="#00f5ff" font-size="12">DC = 6</text>
+      <text x="95" y="130" fill="#ff006e" font-size="12">AB = 6</text>
+      <text x="265" y="130" fill="#00ff88" font-size="12">AC = ?</text>
+    </svg>`,
+    veri:"AD: A köşesinin açıortayı\nBD = 4 cm,  DC = 6 cm\nAB = 6 cm,  AC = ?",
+    soru:"ABC üçgeninde AD açıortayı BC'yi\nD noktasında kesiyor.\nBD = 4, DC = 6, AB = 6 cm ise\nAC kaç cm?",
+    cevap:9,
+    hintler:[
+      "💡 Açıortay Teoremi: BD/DC = AB/AC",
+      "💡 4/6 = 6/AC  →  2/3 = 6/AC",
+      "💡 AC = 6 × 3 ÷ 2 = ?"
+    ],
+    cozum:"Açıortay Teoremi:\nBD/DC = AB/AC\n4/6 = 6/AC\nAC = (6 × 6) ÷ 4\nAC = 36 ÷ 4\n✅ AC = 9 cm"
+  },
+];
+
+let ucgenSoruSirasi=[], ucgenNo=0, ucgenHintIdx=0, ucgenYanlisSay=0, ucgenSkor=0, ucgenBitti=false;
+
+function ucgenBaslat(){
+  ucgenSoruSirasi=[...UCGEN_SORULAR].sort(()=>Math.random()-.5);
+  ucgenNo=0; ucgenSkor=0; ucgenYanlisSay=0; ucgenBitti=false;
+  document.getElementById('ucgenKutlama').classList.remove('goster');
+  document.getElementById('ucgenSkor').textContent='SKOR: 0';
+  ucgenSoruYukle();
+}
+
+function ucgenSoruYukle(){
+  if(ucgenNo>=ucgenSoruSirasi.length) return;
+  const s=ucgenSoruSirasi[ucgenNo];
+  ucgenHintIdx=0; ucgenBitti=false;
+
+  document.getElementById('ucgenBaslik').textContent='// '+s.baslik;
+  document.getElementById('ucgenSvgAlan').innerHTML=s.svg;
+  document.getElementById('ucgenVerilar').innerHTML='<span style="color:var(--accent2);font-size:.6rem;letter-spacing:2px;">VERİLEN</span><br>'+s.veri.replace(/\n/g,'<br>');
+  document.getElementById('ucgenSoruMetin').textContent=s.soru;
+  document.getElementById('ucgenSayac').textContent=(ucgenNo+1)+' / '+ucgenSoruSirasi.length;
+  document.getElementById('ucgenYanlisSayac').textContent='❌ '+ucgenYanlisSay;
+
+  // hint alanı sıfırla
+  const hintBolge=document.getElementById('ucgenHintBolge');
+  hintBolge.innerHTML='';
+  const hintBtn=document.getElementById('ucgenHintBtn');
+  hintBtn.textContent='💡 İPUCU AL ('+s.hintler.length+' adım)';
+  hintBtn.disabled=false;
+
+  document.getElementById('ucgenCozum').textContent='';
+  document.getElementById('ucgenCozum').classList.remove('acik');
+  document.getElementById('ucgenFeedback').textContent='';
+  document.getElementById('ucgenFeedback').className='feedback';
+  document.getElementById('ucgenCevap').value='';
+  document.getElementById('ucgenCevap').style.pointerEvents='';
+  document.getElementById('ucgenCevap').closest('.input-row').style.pointerEvents='';
+  document.getElementById('ucgenCevap').focus();
+}
+
+function ucgenHintGoster(){
+  const s=ucgenSoruSirasi[ucgenNo];
+  if(ucgenHintIdx>=s.hintler.length) return;
+
+  const div=document.createElement('div');
+  div.className='hint-adim';
+  div.textContent=s.hintler[ucgenHintIdx];
+  document.getElementById('ucgenHintBolge').appendChild(div);
+  ucgenHintIdx++;
+
+  const btn=document.getElementById('ucgenHintBtn');
+  if(ucgenHintIdx>=s.hintler.length){
+    btn.textContent='📖 ÇÖZÜMÜ GÖSTER';
+    btn.onclick=ucgenCozumGoster;
+  } else {
+    btn.textContent='💡 İPUCU AL ('+(s.hintler.length-ucgenHintIdx)+' kaldı)';
+  }
+}
+
+function ucgenCozumGoster(){
+  const s=ucgenSoruSirasi[ucgenNo];
+  const cozumEl=document.getElementById('ucgenCozum');
+  cozumEl.textContent=s.cozum;
+  cozumEl.classList.add('acik');
+  document.getElementById('ucgenHintBtn').disabled=true;
+}
+
+function ucgenKontrol(){
+  if(ucgenBitti) return;
+  const v=parseInt(document.getElementById('ucgenCevap').value);
+  if(isNaN(v)) return;
+  const s=ucgenSoruSirasi[ucgenNo];
+
+  if(v===s.cevap){
+    ucgenBitti=true;
+    // Puan: tam doğru = 20, hint kullanıldıysa azalır
+    const puan=Math.max(5, 20 - ucgenHintIdx*5);
+    ucgenSkor+=puan;
+    document.getElementById('ucgenSkor').textContent='SKOR: '+ucgenSkor;
+    document.getElementById('ucgenFeedback').textContent='✅ DOĞRU! +'+puan+' puan';
+    document.getElementById('ucgenFeedback').className='feedback dogru';
+    document.getElementById('ucgenCevap').closest('.input-row').style.pointerEvents='none';
+    document.getElementById('ucgenHintBtn').disabled=true;
+    // Çözümü otomatik göster
+    setTimeout(()=>{ucgenCozumGoster();},400);
+    setTimeout(()=>{
+      ucgenNo++;
+      if(ucgenNo>=ucgenSoruSirasi.length){
+        ucgenBitir();
+      } else {
+        ucgenSoruYukle();
+      }
+    },2200);
+  } else {
+    ucgenYanlisSay++;
+    document.getElementById('ucgenYanlisSayac').textContent='❌ '+ucgenYanlisSay;
+    document.getElementById('ucgenFeedback').textContent='❌ Yanlış! Tekrar dene.';
+    document.getElementById('ucgenFeedback').className='feedback yanlis';
+    document.getElementById('ucgenCevap').value='';
+    // 2 yanlıştan sonra otomatik hint ver
+    if(ucgenYanlisSay>0 && ucgenHintIdx<s.hintler.length){
+      setTimeout(()=>ucgenHintGoster(), 600);
+    }
+  }
+}
+
+function ucgenBitir(){
+  const toplam=ucgenSoruSirasi.length*20;
+  const oran=Math.round(ucgenSkor/toplam*100);
+  document.getElementById('ucgenKutText').innerHTML=
+    'Toplam Skor: <strong style="color:var(--gold)">'+ucgenSkor+'</strong> / '+toplam+'<br>'+
+    'Başarı: <strong style="color:var(--green)">%'+oran+'</strong><br>'+
+    'Yanlış Sayısı: <strong style="color:var(--accent2)">'+ucgenYanlisSay+'</strong>';
+  document.getElementById('ucgenKutlama').classList.add('goster');
+}
+
+const SORULAR_HAVUZ = [
+  // İÇ AÇILAR
+  {s:"Bir üçgenin iki iç açısı 50° ve 70°.\nÜçüncü iç açı kaç derecedir?", c:60, ip:"💡 50+70+x=180 → x=?"},
+  {s:"Bir üçgenin iç açıları\n2x, 3x ve 4x şeklindedir.\nEn büyük açı kaç derecedir?", c:80, ip:"💡 2x+3x+4x=180 → 9x=180 → x=20 → 4x=?"},
+  {s:"Bir ikizkenar üçgenin\ntaban açısı 65°.\nTepe açısı kaç derecedir?", c:50, ip:"💡 65+65+tepe=180 → tepe=?"},
+  {s:"Bir üçgenin iç açıları\noranı 1:2:3'tür.\nEn büyük açı kaç derecedir?", c:90, ip:"💡 Toplam oran=6, 180÷6=30 → en büyük=3×30"},
+  {s:"Bir üçgende iki açı eşit,\nbiri 40°'dir.\nEşit iki açıdan biri kaç derecedir?", c:70, ip:"💡 40+x+x=180 → 2x=140"},
+  // DIŞ AÇILAR
+  {s:"Bir üçgenin dış açısı 110°.\nKomşu iç açı kaç derecedir?", c:70, ip:"💡 Dış açı + komşu iç açı = 180°"},
+  {s:"Bir üçgenin iki iç açısı\n45° ve 55°'dir.\nBu açılara komşu olmayan dış açı kaçtır?", c:100, ip:"💡 Dış açı = karşı iki iç açı toplamı: 45+55=?"},
+  {s:"Bir üçgenin dış açısı 130°,\niç açılardan biri 60°.\nDiğer iç açı kaç derecedir?", c:70, ip:"💡 Dış açı = 60 + x → 130 = 60 + x"},
+  // PIİSAGOR & DİK ÜÇGEN
+  {s:"Dik üçgende dik kenarlar\n9 cm ve 12 cm.\nHipotenüs kaç cm?", c:15, ip:"💡 9²+12²=81+144=225 → √225=?"},
+  {s:"Dik üçgende hipotenüs 17 cm,\nbir dik kenar 8 cm.\nDiğer dik kenar kaç cm?", c:15, ip:"💡 17²-8²=289-64=225 → √225=?"},
+  {s:"Dik üçgende dik kenarlar\n5 cm ve 12 cm.\nHipotenüs kaç cm?", c:13, ip:"💡 25+144=169 → √169=?"},
+  {s:"Dik üçgende hipotenüs 25 cm,\nbir dik kenar 7 cm.\nDiğer dik kenar kaç cm?", c:24, ip:"💡 25²-7²=625-49=576 → √576=?"},
+  // ALAN
+  {s:"Tabanı 10 cm, yüksekliği 6 cm\nolan üçgenin alanı kaç cm²?", c:30, ip:"💡 Alan = (taban × yükseklik) ÷ 2"},
+  {s:"Alanı 40 cm², tabanı 8 cm\nolan üçgenin yüksekliği kaç cm?", c:10, ip:"💡 40 = (8×h)÷2 → 8h=80"},
+  {s:"Eşkenar üçgenin kenarı 6 cm.\nÇevresi kaç cm?", c:18, ip:"💡 Çevre = 3 × kenar"},
+  // BENZERLİK
+  {s:"İki benzer üçgenin benzerlik oranı\n2:3'tür. Küçük üçgenin bir kenarı\n8 cm ise büyüğünkü kaç cm?", c:12, ip:"💡 8/x = 2/3 → x = 8×3÷2"},
+  {s:"Benzerlik oranı 3:5 olan iki üçgende\nbüyüğün bir kenarı 15 cm.\nKüçüğün karşılık gelen kenarı kaç cm?", c:9, ip:"💡 x/15 = 3/5 → x = 15×3÷5"},
+  {s:"İki benzer üçgenin karşılıklı\nkenarları 6 cm ve 9 cm.\nBenzerlik oranı (küçük:büyük)\npayı kaçtır? (x:3 için x=?)", c:2, ip:"💡 6:9 = 2:3 → oran 2/3"},
+  // AÇIORTAY & KENARORTAY
+  {s:"ABC üçgeninde A açısının\naçıortayı BC'yi D noktasında\nkeser. AB=6, AC=9, BD=4 ise\nDC kaç cm?", c:6, ip:"💡 Açıortay teoremi: BD/DC = AB/AC = 6/9 = 2/3 → DC = 4×3÷2"},
+  {s:"Bir üçgenin kenarortayları\nbir noktada (ağırlık merkezi) kesişir.\nBir kenarortay 12 cm ise\nağırlık merkezinden köşeye olan\nuzaklık kaç cm?", c:8, ip:"💡 Ağırlık merkezi, kenarortayı 2:1 oranında böler → 12×2÷3"},
+  // ÇEVRE & ALAN KARMA
+  {s:"Bir üçgenin kenarları\n5, 7 ve 9 cm'dir.\nÇevresi kaç cm?", c:21, ip:"💡 Çevre = 5+7+9"},
+  {s:"İkizkenar üçgenin eşit kenarları\n8 cm, taban 6 cm.\nÇevresi kaç cm?", c:22, ip:"💡 8+8+6=?"},
+  {s:"Eşkenar üçgenin çevresi 24 cm.\nBir kenarı kaç cm?", c:8, ip:"💡 3×kenar=24"},
+  // ÇOKGEN (9.SINIF)
+  {s:"Bir yedigenin (heptagon) iç\naçıları toplamı kaç derecedir?", c:900, ip:"💡 (7-2)×180 = 5×180"},
+  {s:"Bir sekizgenin iç açıları\ntoplamı kaç derecedir?", c:1080, ip:"💡 (8-2)×180 = 6×180"},
+  {s:"Düzgün altıgenin her bir\niç açısı kaç derecedir?", c:120, ip:"💡 (6-2)×180÷6 = 720÷6"},
+  {s:"Bir düzgün çokgenin her\niç açısı 108° ise\nbu çokgen kaç kenarlıdır?", c:5, ip:"💡 (n-2)×180÷n=108 → n=5"},
+  // ÖKLID & YÜKSEKLIK
+  {s:"Dik üçgende hipotenüs 20 cm,\nhipotenüs üzerindeki yükseklik 6 cm.\nYükseklik iki parçadan soldaki 9 cm.\nSağdaki parça kaç cm?", c:11, ip:"💡 20 - 9 = ?"},
+  {s:"Bir dik üçgende hipotenüs\n13 cm, bir dik kenar 5 cm.\nDiğer dik kenar kaç cm?", c:12, ip:"💡 13²-5²=169-25=144 → √144=?"},
+  {s:"Dik üçgende dik kenarlar\n8 ve 15 cm.\nHipotenüs kaç cm?", c:17, ip:"💡 64+225=289 → √289=?"},
+  {s:"ABC dik üçgeninde\na=3, b=4, c=hipotenüs.\nc² kaçtır?", c:25, ip:"💡 3²+4²=9+16=?"},
+];
+
+const HARF_SEKILMAP = {
+  M:[[0,0,0,4],[0,4,2,2],[2,2,4,4],[4,4,4,0]],
+  E:[[0,0,0,4],[0,4,4,4],[0,2,3,2],[0,0,4,0]],
+  R:[[0,0,0,4],[0,4,4,4],[4,4,4,2],[4,2,0,2],[2,2,4,0]],
+  V:[[0,4,2,0],[2,0,4,4]],
+  A:[[0,0,2,4],[2,4,4,0],[1,2,3,2]],
+  L:[[0,4,0,0],[0,0,4,0]],
+  N:[[0,0,0,4],[0,4,4,0],[4,0,4,4]],
+  G:[[4,4,0,4],[0,4,0,0],[0,0,4,0],[4,0,4,2],[2,2,4,2]],
+  D:[[0,0,0,4],[0,4,3,4],[3,4,4,3],[4,3,4,1],[4,1,3,0],[3,0,0,0]],
+  K:[[0,0,0,4],[0,2,4,4],[0,2,4,0]],
+  S:[[4,4,0,4],[0,4,0,2],[0,2,4,2],[4,2,4,0],[4,0,0,0]],
+  Y:[[0,4,2,2],[4,4,2,2],[2,2,2,0]],
+  B:[[0,0,0,4],[0,4,3,4],[3,4,4,3.5],[4,3.5,4,2.5],[4,2.5,0,2.5],[0,2.5,3,2.5],[3,2.5,4,1.5],[4,1.5,4,0],[4,0,0,0]],
+  Ş:[[4,4,0,4],[0,4,0,2],[0,2,4,2],[4,2,4,.5],[3,.5,1,0]],
+};
+
+const KELIME_LISTESI = ['MERVE','ALAN','DENGE','KARE','SAYI','BES'];
+const HARF_NORM = {'İ':'E','Ö':'G','Ü':'V','Ç':'K','Ğ':'G','Ş':'Ş','Ş':'S','ş':'S'};
+
+function normHarf(ch) {
+  return HARF_NORM[ch] || ch;
+}
+
+let kAktifHarfler=[], kSegmentler=[], kSorular=[], kSoruNo=0, kYanlis=0, kBitmis=false, kSkor=0;
+const kCanvas=document.getElementById('koordCanvas');
+const kCtx=kCanvas.getContext('2d');
+const KP=34;
+
+function kXmax(){return kAktifHarfler.length*6+2;}
+function kToC(x,y){
+  const xmx=kXmax();
+  const W=kCanvas.width-KP*2, H=kCanvas.height-KP*2;
+  return [KP+(x+1)/(xmx+2)*W, kCanvas.height-KP-(y+1)/7*H];
+}
+function kCizGrid(){
+  kCtx.clearRect(0,0,kCanvas.width,kCanvas.height);
+  kCtx.fillStyle='#07071a'; kCtx.fillRect(0,0,kCanvas.width,kCanvas.height);
+  const xmx=kXmax();
+  kCtx.strokeStyle='rgba(0,245,255,.07)'; kCtx.lineWidth=.5;
+  for(let x=0;x<=xmx;x++){const[cx]=kToC(x,0);kCtx.beginPath();kCtx.moveTo(cx,KP);kCtx.lineTo(cx,kCanvas.height-KP);kCtx.stroke();}
+  for(let y=0;y<=5;y++){const[,cy]=kToC(0,y);kCtx.beginPath();kCtx.moveTo(KP,cy);kCtx.lineTo(kCanvas.width-KP,cy);kCtx.stroke();}
+  kCtx.strokeStyle='#00f5ff'; kCtx.lineWidth=1.5;
+  const[ox,oy]=kToC(0,0);
+  kCtx.beginPath();kCtx.moveTo(KP,oy);kCtx.lineTo(kCanvas.width-KP,oy);kCtx.stroke();
+  kCtx.beginPath();kCtx.moveTo(ox,KP);kCtx.lineTo(ox,kCanvas.height-KP);kCtx.stroke();
+  kCtx.fillStyle='rgba(0,245,255,.45)'; kCtx.font='8px monospace'; kCtx.textAlign='center';
+  for(let x=0;x<=xmx;x+=2){const[cx]=kToC(x,0);kCtx.fillText(x,cx,oy+13);}
+  kCtx.textAlign='right';
+  for(let y=0;y<=5;y++){const[,cy]=kToC(0,y);kCtx.fillText(y,ox-5,cy+3);}
+}
+function kHarfCiz(idx){
+  const segs=kSegmentler[idx];
+  const renk=['#00f5ff','#ff006e','#00ff88','#ffd700','#bf5fff','#ff8c00'][idx%6];
+  segs.forEach(([x1,y1,x2,y2],i)=>{
+    const[cx1,cy1]=kToC(x1,y1);const[cx2,cy2]=kToC(x2,y2);
+    setTimeout(()=>{
+      kCtx.strokeStyle=renk;kCtx.lineWidth=3.5;kCtx.lineCap='round';
+      kCtx.shadowColor=renk;kCtx.shadowBlur=10;
+      kCtx.beginPath();kCtx.moveTo(cx1,cy1);kCtx.lineTo(cx2,cy2);kCtx.stroke();
+      [[cx1,cy1],[cx2,cy2]].forEach(([px,py])=>{kCtx.fillStyle=renk;kCtx.beginPath();kCtx.arc(px,py,2.5,0,Math.PI*2);kCtx.fill();});
+      kCtx.shadowBlur=0;
+    },i*180);
+  });
+}
+
+function koordBaslat(){
+  const sel=document.getElementById('koordKelSel').value;
+  const keys=['MERVE','ALAN','DENGE','KARE','SAYI','BEŞ'];
+  const kelime=sel||keys[Math.floor(Math.random()*keys.length)];
+  kAktifHarfler=[...kelime];
+  kSegmentler=kAktifHarfler.map((ch,i)=>{
+    const nch=normHarf(ch);
+    const sek=HARF_SEKILMAP[nch]||HARF_SEKILMAP['E'];
+    return sek.map(([x1,y1,x2,y2])=>[x1+i*6,y1,x2+i*6,y2]);
+  });
+  const kar=[...SORULAR_HAVUZ].sort(()=>Math.random()-.5);
+  kSorular=kar.slice(0,kAktifHarfler.length);
+  kSoruNo=0;kYanlis=0;kBitmis=false;kSkor=0;
+  document.getElementById('koordBasSec').style.display='none';
+  document.getElementById('koordOyunAlani').style.display='block';
+  const row=document.getElementById('koordHarfRow');
+  row.innerHTML='';
+  kAktifHarfler.forEach((ch,i)=>{
+    const d=document.createElement('div');d.className='harf-badge';d.id='kb'+i;d.textContent=ch;row.appendChild(d);
+  });
+  document.getElementById('koordKutlama').classList.remove('goster');
+  document.getElementById('koordSoruLabel').parentElement.style.display='';
+  document.getElementById('koordCevap').closest('.input-row').style.display='flex';
+  document.getElementById('koordFeedback').style.display='';
+  kCizGrid();kSoruGoster();
+}
+
+function kSoruGoster(){
+  if(kSoruNo>=kSorular.length)return;
+  const s=kSorular[kSoruNo];
+  document.getElementById('koordSoruLabel').textContent='// SORU '+(kSoruNo+1)+'/'+kSorular.length+' — '+kAktifHarfler[kSoruNo]+' HARFİ';
+  document.getElementById('koordAdim').textContent=(kSoruNo+1)+'/'+kSorular.length;
+  document.getElementById('koordSoruText').textContent=s.s;
+  document.getElementById('koordIpucu').textContent='';
+  document.getElementById('koordIpucu').classList.remove('goster');
+  document.getElementById('koordFeedback').textContent='';
+  document.getElementById('koordFeedback').className='feedback';
+  document.getElementById('koordCevap').value='';
+  document.getElementById('koordCevap').focus();
+  kYanlis=0;
+}
+
+function koordKontrol(){
+  if(kBitmis)return;
+  const v=parseInt(document.getElementById('koordCevap').value);
+  if(isNaN(v))return;
+  const s=kSorular[kSoruNo];
+  if(v===s.c){
+    kSkor+=10;
+    document.getElementById('koordSkor').textContent='SKOR: '+kSkor;
+    document.getElementById('koordFeedback').textContent='✅ DOĞRU!';
+    document.getElementById('koordFeedback').className='feedback dogru';
+    document.getElementById('kb'+kSoruNo).classList.add('acik');
+    document.getElementById('koordCevap').closest('.input-row').style.pointerEvents='none';
+    setTimeout(()=>{
+      kHarfCiz(kSoruNo);kSoruNo++;
+      if(kSoruNo>=kSorular.length){
+        setTimeout(()=>{
+          kBitmis=true;
+          document.getElementById('koordKutText').innerHTML='<strong style="color:var(--accent)">'+kAktifHarfler.join('')+'</strong> tamamlandı! Skor: '+kSkor;
+          document.getElementById('koordKutlama').classList.add('goster');
+          document.getElementById('koordSoruLabel').parentElement.style.display='none';
+          document.getElementById('koordCevap').closest('.input-row').style.display='none';
+          document.getElementById('koordFeedback').style.display='none';
+        },1100);
+      } else {
+        setTimeout(()=>{
+          document.getElementById('koordCevap').closest('.input-row').style.pointerEvents='';
+          kSoruGoster();
+        },900);
+      }
+    },500);
+  } else {
+    kYanlis++;
+    document.getElementById('koordFeedback').textContent='❌ YANLIŞ! ('+kYanlis+'. deneme)';
+    document.getElementById('koordFeedback').className='feedback yanlis';
+    document.getElementById('koordCevap').value='';
+    if(kYanlis>=2){document.getElementById('koordIpucu').textContent=s.ip;document.getElementById('koordIpucu').classList.add('goster');}
+  }
+}
+
+// DAİRE GRAFİĞİ
+const DAIRE_SORULAR = [
+  {
+    baslik:"Bir sınıftaki öğrencilerin favori ders dağılımı",
+    dilimler:[
+      {etiket:"Matematik",yuzde:35,renk:"#00f5ff"},
+      {etiket:"Türkçe",yuzde:25,renk:"#ff006e"},
+      {etiket:"Fen",yuzde:20,renk:"#00ff88"},
+      {etiket:"Sosyal",yuzde:15,renk:"#ffd700"},
+      {etiket:"Diğer",yuzde:5,renk:"#bf5fff"},
+    ],
+    sorular:[
+      {s:"Matematik tercih edenlerin yüzdesi kaçtır?",c:35,ip:"💡 En büyük dilimi bul"},
+      {s:"Fen ve Sosyal tercihlerinin\ntoplam yüzdesi kaçtır?",c:35,ip:"💡 20+15=?"},
+      {s:"Toplam 200 öğrenci varsa,\nTürkçe'yi kaç kişi seçmiştir?",c:50,ip:"💡 200×25÷100=?"},
+      {s:"Grafikte kaç farklı ders\ngösterilmektedir?",c:5,ip:"💡 Dilimleri say"},
+    ]
+  },
+  {
+    baslik:"Bir ailenin aylık bütçe harcamaları",
+    dilimler:[
+      {etiket:"Kira",yuzde:40,renk:"#00f5ff"},
+      {etiket:"Market",yuzde:30,renk:"#ff006e"},
+      {etiket:"Ulaşım",yuzde:15,renk:"#ffd700"},
+      {etiket:"Eğlence",yuzde:10,renk:"#00ff88"},
+      {etiket:"Diğer",yuzde:5,renk:"#bf5fff"},
+    ],
+    sorular:[
+      {s:"Kira harcaması toplam bütçenin\nyüzde kaçıdır?",c:40,ip:"💡 En büyük dilimi bul"},
+      {s:"Market ve Ulaşım harcamalarının\ntoplam yüzdesi kaçtır?",c:45,ip:"💡 30+15=?"},
+      {s:"Aylık gelir 5000₺ ise,\nkiraya kaç ₺ ödenmektedir?",c:2000,ip:"💡 5000×40÷100=?"},
+      {s:"Eğlence harcaması 300₺ ise\ntoplam aylık gelir kaç ₺?",c:3000,ip:"💡 %10=300₺ → %100=?"},
+    ]
+  },
+  {
+    baslik:"Türkiye'deki enerji kaynakları dağılımı",
+    dilimler:[
+      {etiket:"Doğalgaz",yuzde:38,renk:"#ff8c00"},
+      {etiket:"Kömür",yuzde:28,renk:"#888"},
+      {etiket:"Hidroelektrik",yuzde:20,renk:"#00f5ff"},
+      {etiket:"Yenilenebilir",yuzde:14,renk:"#00ff88"},
+    ],
+    sorular:[
+      {s:"En çok kullanılan enerji kaynağı\nyüzde kaçtır?",c:38,ip:"💡 Doğalgaz dilimini bul"},
+      {s:"Hidroelektrik ve Yenilenebilir'in\ntoplam yüzdesi kaçtır?",c:34,ip:"💡 20+14=?"},
+      {s:"Toplam 1000 birim enerjinin\nkaç birimi kömürden üretilir?",c:280,ip:"💡 1000×28÷100=?"},
+      {s:"Grafikte kaç enerji kaynağı\ngösterilmektedir?",c:4,ip:"💡 Dilimleri say"},
+    ]
+  },
+];
+
+let daireSoruSeti=0, daireSoruNo=0, daireYanlis=0, daireSkor=0;
+const dCanvas=document.getElementById('daireCanvas');
+const dCtx=dCanvas.getContext('2d');
+
+function daireBaslat(){
+  daireSoruSeti=Math.floor(Math.random()*DAIRE_SORULAR.length);
+  daireSoruNo=0;daireYanlis=0;daireSkor=0;
+  document.getElementById('daireSkor').textContent='SKOR: 0';
+  document.getElementById('daireKutlama').classList.remove('goster');
+  document.getElementById('daireCevap').closest('.input-row').style.display='flex';
+  document.getElementById('daireFeedback').style.display='';
+  document.getElementById('daireSoruLabel').parentElement.style.display='';
+  daireCiz(); daireSoruGoster();
+}
+
+function daireCiz(){
+  const set=DAIRE_SORULAR[daireSoruSeti];
+  dCtx.clearRect(0,0,dCanvas.width,dCanvas.height);
+  dCtx.fillStyle='#07071a';dCtx.fillRect(0,0,dCanvas.width,dCanvas.height);
+  const cx=dCanvas.width/2, cy=140, r=110;
+  let aci=-Math.PI/2;
+  set.dilimler.forEach(d=>{
+    const ac=2*Math.PI*d.yuzde/100;
+    dCtx.beginPath();dCtx.moveTo(cx,cy);dCtx.arc(cx,cy,r,aci,aci+ac);dCtx.closePath();
+    dCtx.fillStyle=d.renk;dCtx.fill();
+    dCtx.strokeStyle='#07071a';dCtx.lineWidth=2;dCtx.stroke();
+    const mx=cx+Math.cos(aci+ac/2)*r*.65, my=cy+Math.sin(aci+ac/2)*r*.65;
+    dCtx.fillStyle='#000';dCtx.font='bold 11px monospace';dCtx.textAlign='center';
+    dCtx.fillText(d.yuzde+'%',mx,my+4);
+    aci+=ac;
+  });
+  let ly=dCanvas.height-set.dilimler.length*22-6;
+  set.dilimler.forEach(d=>{
+    dCtx.fillStyle=d.renk;dCtx.fillRect(16,ly,12,12);
+    dCtx.fillStyle='#c8d6e5';dCtx.font='11px monospace';dCtx.textAlign='left';
+    dCtx.fillText(d.etiket+' ('+d.yuzde+'%)',34,ly+10);
+    ly+=22;
+  });
+  document.getElementById('daireAciklama').textContent='📊 '+set.baslik;
+}
+
+function daireSoruGoster(){
+  const set=DAIRE_SORULAR[daireSoruSeti];
+  if(daireSoruNo>=set.sorular.length)return;
+  const s=set.sorular[daireSoruNo];
+  document.getElementById('daireSoruLabel').textContent='// SORU '+(daireSoruNo+1)+'/'+set.sorular.length;
+  document.getElementById('daireAdim').textContent=(daireSoruNo+1)+' / '+set.sorular.length;
+  document.getElementById('daireSoruText').textContent=s.s;
+  document.getElementById('daireIpucu').textContent='';document.getElementById('daireIpucu').classList.remove('goster');
+  document.getElementById('daireFeedback').textContent='';document.getElementById('daireFeedback').className='feedback';
+  document.getElementById('daireCevap').value='';document.getElementById('daireCevap').focus();
+  daireYanlis=0;
+}
+
+function daireKontrol(){
+  const v=parseInt(document.getElementById('daireCevap').value);if(isNaN(v))return;
+  const s=DAIRE_SORULAR[daireSoruSeti].sorular[daireSoruNo];
+  if(v===s.c){
+    daireSkor+=10;document.getElementById('daireSkor').textContent='SKOR: '+daireSkor;
+    document.getElementById('daireFeedback').textContent='✅ DOĞRU!';document.getElementById('daireFeedback').className='feedback dogru';
+    document.getElementById('daireCevap').closest('.input-row').style.pointerEvents='none';
+    setTimeout(()=>{daireSoruNo++;
+      const tot=DAIRE_SORULAR[daireSoruSeti].sorular.length;
+      if(daireSoruNo>=tot){
+        document.getElementById('daireKutlama').classList.add('goster');
+        document.getElementById('daireCevap').closest('.input-row').style.display='none';
+        document.getElementById('daireFeedback').style.display='none';
+        document.getElementById('daireSoruLabel').parentElement.style.display='none';
+      } else {
+        document.getElementById('daireCevap').closest('.input-row').style.pointerEvents='';
+        daireSoruGoster();
+      }
+    },800);
+  } else {
+    daireYanlis++;
+    document.getElementById('daireFeedback').textContent='❌ YANLIŞ! ('+daireYanlis+'. deneme)';
+    document.getElementById('daireFeedback').className='feedback yanlis';
+    document.getElementById('daireCevap').value='';
+    if(daireYanlis>=2){document.getElementById('daireIpucu').textContent=s.ip;document.getElementById('daireIpucu').classList.add('goster');}
+  }
+}
+
+// ÇUBUK GRAFİK
+const CUBUK_SETLER = [
+  {
+    baslik:"2019-2024 yılları arasında bir okulun öğrenci sayısı",
+    etiketler:["2019","2020","2021","2022","2023","2024"],
+    degerler:[320,350,410,380,450,490],
+    renkler:["#00f5ff","#00d4dd","#00b3bb","#009299","#007177","#005055"],
+    sorular:[
+      {s:"En fazla öğrencinin olduğu yıl\nkaç öğrenciye sahiptir?",c:490,ip:"💡 En uzun çubuğa bak"},
+      {s:"En az öğrencinin olduğu yıl\nkaç öğrenciye sahiptir?",c:320,ip:"💡 En kısa çubuğa bak"},
+      {s:"2021 ve 2022 yıllarının\ntoplam öğrenci sayısı kaçtır?",c:790,ip:"💡 410+380=?"},
+      {s:"2019'dan 2024'e kadar\nkaç öğrenci artışı olmuştur?",c:170,ip:"💡 490-320=?"},
+      {s:"2020 ile 2021 arasındaki\nöğrenci artışı kaçtır?",c:60,ip:"💡 410-350=?"},
+      {s:"Grafikte kaç yıl gösterilmektedir?",c:6,ip:"💡 Çubukları say"},
+    ]
+  },
+  {
+    baslik:"Bir markette haftalık meyve satışları (kg)",
+    etiketler:["Elma","Armut","Muz","Portakal","Çilek","Üzüm"],
+    degerler:[85,60,120,95,45,70],
+    renkler:["#ff4444","#ffaa44","#ffff44","#ff8c44","#ff4488","#8844ff"],
+    sorular:[
+      {s:"En çok satılan meyve\nkaç kg satılmıştır?",c:120,ip:"💡 En uzun çubuğa bak (Muz)"},
+      {s:"En az satılan meyve\nkaç kg satılmıştır?",c:45,ip:"💡 En kısa çubuğa bak (Çilek)"},
+      {s:"Elma ve Armut satışlarının\ntoplamı kaç kg'dır?",c:145,ip:"💡 85+60=?"},
+      {s:"Portakal ve Üzüm satışlarının\nfarkı kaç kg'dır?",c:25,ip:"💡 95-70=?"},
+      {s:"Tüm meyvelerin toplam satışı\nkaç kg'dır?",c:475,ip:"💡 85+60+120+95+45+70=?"},
+      {s:"Muz, Elma'nın kaç katıdır?\n(tam sayı)",c:1,ip:"💡 120÷85 ≈ 1.4 → tam sayı: 1"},
+    ]
+  },
+];
+
+let cubukSet=0, cubukSoruNo=0, cubukYanlis=0, cubukSkor=0;
+
+function cubukBaslat(){
+  cubukSet=Math.floor(Math.random()*CUBUK_SETLER.length);
+  cubukSoruNo=0;cubukYanlis=0;cubukSkor=0;
+  document.getElementById('cubukSkor').textContent='SKOR: 0';
+  document.getElementById('cubukKutlama').classList.remove('goster');
+  document.getElementById('cubukCevap').closest('.input-row').style.display='flex';
+  document.getElementById('cubukFeedback').style.display='';
+  document.getElementById('cubukSoruLabel').parentElement.style.display='';
+  cubukCiz();cubukSoruGoster();
+}
+
+function cubukCiz(){
+  const set=CUBUK_SETLER[cubukSet];
+  document.getElementById('cubukBaslik').textContent='// '+set.baslik.toUpperCase();
+  const container=document.getElementById('cubukContainer');
+  container.innerHTML='';
+  const maxVal=Math.max(...set.degerler);
+  set.degerler.forEach((v,i)=>{
+    const pct=v/maxVal*100;
+    const wrap=document.createElement('div');wrap.className='cubuk-wrap';
+    const val=document.createElement('div');val.className='cubuk-val';val.style.color=set.renkler[i];val.textContent=v;
+    const bar=document.createElement('div');bar.className='cubuk';
+    bar.style.cssText='height:'+pct+'%;background:'+set.renkler[i]+';box-shadow:0 0 8px '+set.renkler[i]+'44;';
+    const lbl=document.createElement('div');lbl.className='cubuk-etiket';lbl.textContent=set.etiketler[i];
+    wrap.appendChild(val);wrap.appendChild(bar);wrap.appendChild(lbl);
+    container.appendChild(wrap);
+  });
+}
+
+function cubukSoruGoster(){
+  const set=CUBUK_SETLER[cubukSet];
+  if(cubukSoruNo>=set.sorular.length)return;
+  const s=set.sorular[cubukSoruNo];
+  document.getElementById('cubukSoruLabel').textContent='// SORU '+(cubukSoruNo+1)+'/'+set.sorular.length;
+  document.getElementById('cubukAdim').textContent=(cubukSoruNo+1)+' / '+set.sorular.length;
+  document.getElementById('cubukSoruText').textContent=s.s;
+  document.getElementById('cubukIpucu').textContent='';document.getElementById('cubukIpucu').classList.remove('goster');
+  document.getElementById('cubukFeedback').textContent='';document.getElementById('cubukFeedback').className='feedback';
+  document.getElementById('cubukCevap').value='';document.getElementById('cubukCevap').focus();
+  cubukYanlis=0;
+}
+
+function cubukKontrol(){
+  const v=parseInt(document.getElementById('cubukCevap').value);if(isNaN(v))return;
+  const s=CUBUK_SETLER[cubukSet].sorular[cubukSoruNo];
+  if(v===s.c){
+    cubukSkor+=10;document.getElementById('cubukSkor').textContent='SKOR: '+cubukSkor;
+    document.getElementById('cubukFeedback').textContent='✅ DOĞRU!';document.getElementById('cubukFeedback').className='feedback dogru';
+    document.getElementById('cubukCevap').closest('.input-row').style.pointerEvents='none';
+    setTimeout(()=>{cubukSoruNo++;
+      const tot=CUBUK_SETLER[cubukSet].sorular.length;
+      if(cubukSoruNo>=tot){
+        document.getElementById('cubukKutlama').classList.add('goster');
+        document.getElementById('cubukCevap').closest('.input-row').style.display='none';
+        document.getElementById('cubukFeedback').style.display='none';
+        document.getElementById('cubukSoruLabel').parentElement.style.display='none';
+      } else {
+        document.getElementById('cubukCevap').closest('.input-row').style.pointerEvents='';
+        cubukSoruGoster();
+      }
+    },800);
+  } else {
+    cubukYanlis++;
+    document.getElementById('cubukFeedback').textContent='❌ YANLIŞ! ('+cubukYanlis+'. deneme)';
+    document.getElementById('cubukFeedback').className='feedback yanlis';
+    document.getElementById('cubukCevap').value='';
+    if(cubukYanlis>=2){document.getElementById('cubukIpucu').textContent=s.ip;document.getElementById('cubukIpucu').classList.add('goster');}
+  }
+}
+
+// DOĞRU / YANLIŞ
+const DY_SORULAR = [
+  {ifade:"Bir üçgenin iç açıları toplamı\n180 derecedir.",dogru:true},
+  {ifade:"Bir üçgenin dış açısı, komşu\nolmayan iki iç açının farkına eşittir.",dogru:false},
+  {ifade:"Pisagor teoremi: a² + b² = c²\nsadece dik üçgenlerde geçerlidir.",dogru:true},
+  {ifade:"Eşkenar üçgenin her açısı\n60 derecedir.",dogru:true},
+  {ifade:"İkizkenar üçgende taban açıları\nbirbirine eşittir.",dogru:true},
+  {ifade:"Bir üçgenin herhangi bir kenarı,\ndiğer iki kenarın toplamından\nbüyük olabilir.",dogru:false},
+  {ifade:"Üçgenin dış açısı, kendisiyle\nkomşu olmayan iki iç açının\ntoplamına eşittir.",dogru:true},
+  {ifade:"Her dik üçgen aynı zamanda\nikizkenar üçgendir.",dogru:false},
+  {ifade:"Eşkenar üçgen aynı zamanda\nikizkenar üçgendir.",dogru:true},
+  {ifade:"Bir üçgende en uzun kenar,\nen büyük açının karşısındadır.",dogru:true},
+  {ifade:"İki üçgen benzer ise\nalanları da eşittir.",dogru:false},
+  {ifade:"Benzer üçgenlerde karşılıklı\naçılar eşittir.",dogru:true},
+  {ifade:"Açıortay, karşı kenarı\n1:1 oranında böler.",dogru:false},
+  {ifade:"Kenarortaylar, ağırlık merkezinde\nbir araya gelir.",dogru:true},
+  {ifade:"Ağırlık merkezi, her kenarortayı\n2:1 oranında böler\n(köşeden itibaren).",dogru:true},
+  {ifade:"Dik üçgende hipotenüs,\ndik kenarlardan kısadır.",dogru:false},
+  {ifade:"Bir üçgende iki kenarın farkı,\nüçüncü kenardan küçük olmalıdır.",dogru:true},
+  {ifade:"3-4-5 kenar uzunlukları\nbir dik üçgen oluşturur.",dogru:true},
+  {ifade:"5-12-13 kenar uzunlukları\nbir dik üçgen oluşturur.",dogru:true},
+  {ifade:"Bir üçgenin iç açı açıortayları\nbir noktada (iç teğet merkezi)\nkesişir.",dogru:true},
+];
+
+let dySorular=[], dyNo=0, dySkor=0, dyDogru=0, dyYanlis=0;
+
+function dyBaslat(){
+  dySorular=[...DY_SORULAR].sort(()=>Math.random()-.5).slice(0,12);
+  dyNo=0;dySkor=0;dyDogru=0;dyYanlis=0;
+  document.getElementById('dySkor').textContent='SKOR: 0';
+  document.getElementById('dyKutlama').classList.remove('goster');
+  document.getElementById('dyButonlar').style.display='flex';
+  document.getElementById('dyKart').style.display='block';
+  document.getElementById('dyFeedback').textContent='';
+  document.getElementById('dyFeedback').style.display='';
+  dySoruGoster();
+}
+
+function dySoruGoster(){
+  if(dyNo>=dySorular.length)return;
+  const s=dySorular[dyNo];
+  document.getElementById('dyAdim').textContent=(dyNo+1)+' / '+dySorular.length;
+  document.getElementById('dyKart').textContent=s.ifade;
+  document.getElementById('dyFeedback').textContent='';
+  document.getElementById('dyFeedback').className='feedback';
+  document.getElementById('dyButonlar').style.pointerEvents='';
+}
+
+function dyKontrol(kullaniciBool){
+  const s=dySorular[dyNo];
+  const dogru=kullaniciBool===s.dogru;
+  document.getElementById('dyButonlar').style.pointerEvents='none';
+  if(dogru){
+    dySkor+=10;dyDogru++;
+    document.getElementById('dySkor').textContent='SKOR: '+dySkor;
+    document.getElementById('dyFeedback').textContent='✅ DOĞRU!';
+    document.getElementById('dyFeedback').className='feedback dogru';
+  } else {
+    dyYanlis++;
+    document.getElementById('dyFeedback').textContent='❌ YANLIŞ! Doğrusu: '+(s.dogru?'DOĞRU':'YANLIŞ');
+    document.getElementById('dyFeedback').className='feedback yanlis';
+  }
+  setTimeout(()=>{dyNo++;
+    if(dyNo>=dySorular.length){
+      document.getElementById('dyKutlama').classList.add('goster');
+      document.getElementById('dyButonlar').style.display='none';
+      document.getElementById('dyKart').style.display='none';
+      document.getElementById('dyFeedback').style.display='none';
+      document.getElementById('dySonText').innerHTML='Doğru: <strong style="color:var(--green)">'+dyDogru+'</strong> | Yanlış: <strong style="color:var(--accent2)">'+dyYanlis+'</strong><br>Toplam Skor: <strong style="color:var(--gold)">'+dySkor+'</strong>';
+    } else {
+      dySoruGoster();
+    }
+  },1100);
+}
+
+function oyunAc(id){
+  document.getElementById('anaMenu').style.display='none';
+  document.querySelectorAll('.oyun-alani').forEach(e=>e.classList.remove('goster'));
+  document.getElementById('oyun-'+id).classList.add('goster');
+  if(id==='daire') daireBaslat();
+  if(id==='cubuk') cubukBaslat();
+  if(id==='dogru-yanlis') dyBaslat();
+  if(id==='ucgen') ucgenBaslat();
+}
+
+function menuye(){
+  document.getElementById('anaMenu').style.display='grid';
+  document.querySelectorAll('.oyun-alani').forEach(e=>e.classList.remove('goster'));
+}
+</script>
+</body>
+</html>
